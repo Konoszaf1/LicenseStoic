@@ -20,12 +20,8 @@ from licensestoic.models import (
     ScanResult,
 )
 from licensestoic.remediation import RemediationEngine
-from licensestoic.validator import LicenseCompatibilityValidator
 
-
-@pytest.fixture
-def validator():
-    return LicenseCompatibilityValidator()
+# validator fixture is provided by conftest.py with flict pinned to False
 
 
 @pytest.fixture
@@ -161,9 +157,15 @@ class TestRestructuringOptions:
         restructure = [
             o for o in options if o.strategy == RemediationStrategy.RESTRUCTURE_INTEGRATION
         ]
-        # May or may not suggest subprocess isolation, but NOT dynamic linking
+        # Should NOT suggest switching to dynamic linking (already dynamic)
         for r in restructure:
-            assert "dynamic" not in r.description.lower() or "subprocess" in r.description.lower()
+            desc = r.description.lower()
+            if "dynamic" in desc:
+                # Only acceptable if it's about subprocess isolation, not re-doing dynamic
+                assert "subprocess" in desc, (
+                    f"Restructure option for already-dynamic dep suggests dynamic linking: "
+                    f"{r.description}"
+                )
 
 
 class TestCompoundExpressionDeduplication:

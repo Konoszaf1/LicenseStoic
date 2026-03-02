@@ -156,8 +156,8 @@ class TestPipelineEndToEnd:
             distribution_type=DistributionType.BINARY,
         )
 
-        # Should NOT be auto-apply (which implies "all clear")
-        assert scan_result.review_action != ReviewAction.AUTO_APPLY
+        # Unknown license deps must escalate — not merely "suggest"
+        assert scan_result.review_action == ReviewAction.ESCALATE
         # Should have at least one conflict for the unknown dep
         assert len(scan_result.conflicts) >= 1
         assert any(c.rule_source == "unknown_license" for c in scan_result.conflicts)

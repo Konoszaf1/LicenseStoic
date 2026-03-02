@@ -28,6 +28,10 @@ class TestParseLicenseExpression:
         result = parse_license_expression("GPL-2.0-only WITH Classpath-exception-2.0")
         assert result.is_valid_spdx is True
         assert len(result.identifiers) >= 1
+        # WITH exceptions are kept as a single compound identifier
+        assert "GPL-2.0-only" in result.spdx_expression
+        assert "Classpath-exception-2.0" in result.spdx_expression
+        assert "WITH" in result.spdx_expression
 
     def test_complex_nested_expression(self):
         result = parse_license_expression("(MIT OR Apache-2.0) AND GPL-3.0-only")

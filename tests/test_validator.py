@@ -19,13 +19,8 @@ from licensestoic.models import (
     IntegrationType,
     LicenseExpression,
 )
-from licensestoic.validator import LicenseCompatibilityValidator
 
-
-@pytest.fixture
-def validator():
-    return LicenseCompatibilityValidator()
-
+# validator fixture is provided by conftest.py with flict pinned to False
 
 # ---------------------------------------------------------------------------
 # Ground-truth pairwise compatibility tests (OSADL matrix)

@@ -1,14 +1,13 @@
 """Tests for the dependency scanner — Layer 1.
 
 Tests importlib.metadata backend, tomllib parsing, deduplication,
-npm node_modules enrichment, and SBOM import.
+npm node_modules enrichment, SBOM import, npm scanning, and ScanCode.
 """
 
 import importlib.metadata
 import json
 import subprocess
 import urllib.error
-from email.message import Message
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -24,32 +23,12 @@ from licensestoic.scanner import (
     _read_npm_package_license,
     _resolve_via_uv_install,
     _scan_importlib_metadata,
+    _scan_npm_deps,
     _scan_python_deps,
+    scan_from_sbom,
 )
 
-
-def _make_dist_metadata(
-    name: str,
-    version: str = "1.0.0",
-    license_field: str = "",
-    classifiers: list[str] | None = None,
-) -> Message:
-    """Build an email.message.Message mimicking importlib.metadata dist.metadata."""
-    msg = Message()
-    msg["Name"] = name
-    msg["Version"] = version
-    if license_field:
-        msg["License"] = license_field
-    for c in classifiers or []:
-        msg["Classifier"] = c
-    return msg
-
-
-class _FakeDist:
-    """Minimal fake for importlib.metadata distribution objects."""
-
-    def __init__(self, metadata: Message) -> None:
-        self.metadata = metadata
+from factories import FakeDist, FakeDistWithRequires, make_dist_metadata
 
 
 class TestNormalizePackageName:
@@ -128,8 +107,8 @@ class TestScanImportlibMetadata:
     @patch("licensestoic.scanner.importlib.metadata.distributions")
     def test_finds_installed_package_with_license_field(self, mock_distributions: object) -> None:
         """Package with valid SPDX in License metadata field."""
-        meta = _make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
-        mock_distributions.return_value = [_FakeDist(meta)]  # type: ignore[attr-defined]
+        meta = make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
+        mock_distributions.return_value = [FakeDist(meta)]  # type: ignore[attr-defined]
 
         nodes = _scan_importlib_metadata(dep_names={"requests"})
         assert len(nodes) == 1
@@ -141,13 +120,13 @@ class TestScanImportlibMetadata:
     @patch("licensestoic.scanner.importlib.metadata.distributions")
     def test_falls_back_to_classifiers(self, mock_distributions: object) -> None:
         """Package with UNKNOWN License field but valid classifier."""
-        meta = _make_dist_metadata(
+        meta = make_dist_metadata(
             "click",
             "8.1.0",
             license_field="UNKNOWN",
             classifiers=["License :: OSI Approved :: BSD License"],
         )
-        mock_distributions.return_value = [_FakeDist(meta)]  # type: ignore[attr-defined]
+        mock_distributions.return_value = [FakeDist(meta)]  # type: ignore[attr-defined]
 
         nodes = _scan_importlib_metadata(dep_names={"click"})
         assert len(nodes) == 1
@@ -157,11 +136,11 @@ class TestScanImportlibMetadata:
     @patch("licensestoic.scanner.importlib.metadata.distributions")
     def test_filters_by_dep_names(self, mock_distributions: object) -> None:
         """Only returns packages in the dep_names set."""
-        meta1 = _make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
-        meta2 = _make_dist_metadata("unrelated", "1.0.0", license_field="MIT")
+        meta1 = make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
+        meta2 = make_dist_metadata("unrelated", "1.0.0", license_field="MIT")
         mock_distributions.return_value = [  # type: ignore[attr-defined]
-            _FakeDist(meta1),
-            _FakeDist(meta2),
+            FakeDist(meta1),
+            FakeDist(meta2),
         ]
 
         nodes = _scan_importlib_metadata(dep_names={"requests"})
@@ -171,8 +150,8 @@ class TestScanImportlibMetadata:
     @patch("licensestoic.scanner.importlib.metadata.distributions")
     def test_unknown_stays_unknown(self, mock_distributions: object) -> None:
         """Package with no license info stays UNKNOWN."""
-        meta = _make_dist_metadata("mystery", "0.1.0", license_field="")
-        mock_distributions.return_value = [_FakeDist(meta)]  # type: ignore[attr-defined]
+        meta = make_dist_metadata("mystery", "0.1.0", license_field="")
+        mock_distributions.return_value = [FakeDist(meta)]  # type: ignore[attr-defined]
 
         nodes = _scan_importlib_metadata(dep_names={"mystery"})
         assert len(nodes) == 1
@@ -181,11 +160,11 @@ class TestScanImportlibMetadata:
     @patch("licensestoic.scanner.importlib.metadata.distributions")
     def test_deduplicates_distributions(self, mock_distributions: object) -> None:
         """Multiple dist-info dirs for same package should not produce duplicates."""
-        meta1 = _make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
-        meta2 = _make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
+        meta1 = make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
+        meta2 = make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
         mock_distributions.return_value = [  # type: ignore[attr-defined]
-            _FakeDist(meta1),
-            _FakeDist(meta2),
+            FakeDist(meta1),
+            FakeDist(meta2),
         ]
 
         nodes = _scan_importlib_metadata(dep_names={"requests"})
@@ -564,18 +543,9 @@ class TestTransitiveDependencyCollection:
     def test_collects_transitive_deps(self, mock_dist_fn: MagicMock) -> None:
         """requests -> urllib3 -> charset-normalizer chain is discovered."""
         # Build fake distribution objects
-        requests_meta = _make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
-        urllib3_meta = _make_dist_metadata("urllib3", "2.0.0", license_field="MIT")
-        charset_meta = _make_dist_metadata("charset-normalizer", "3.3.0", license_field="MIT")
-
-        class FakeDistWithRequires:
-            def __init__(self, metadata: object, requires: list[str] | None = None) -> None:
-                self.metadata = metadata
-                self._requires = requires
-
-            @property
-            def requires(self) -> list[str] | None:
-                return self._requires
+        requests_meta = make_dist_metadata("requests", "2.31.0", license_field="Apache-2.0")
+        urllib3_meta = make_dist_metadata("urllib3", "2.0.0", license_field="MIT")
+        charset_meta = make_dist_metadata("charset-normalizer", "3.3.0", license_field="MIT")
 
         requests_dist = FakeDistWithRequires(requests_meta, ["urllib3>=2.0"])
         urllib3_dist = FakeDistWithRequires(urllib3_meta, ["charset-normalizer>=3.0"])
@@ -606,17 +576,8 @@ class TestTransitiveDependencyCollection:
     @patch("licensestoic.scanner.importlib.metadata.distribution")
     def test_skips_extras_only_deps(self, mock_dist_fn: MagicMock) -> None:
         """Dependencies with 'extra ==' markers are skipped."""
-        mylib_meta = _make_dist_metadata("mylib", "1.0.0", license_field="MIT")
-        real_dep_meta = _make_dist_metadata("real-dep", "1.0.0", license_field="MIT")
-
-        class FakeDistWithRequires:
-            def __init__(self, metadata: object, requires: list[str] | None = None) -> None:
-                self.metadata = metadata
-                self._requires = requires
-
-            @property
-            def requires(self) -> list[str] | None:
-                return self._requires
+        mylib_meta = make_dist_metadata("mylib", "1.0.0", license_field="MIT")
+        real_dep_meta = make_dist_metadata("real-dep", "1.0.0", license_field="MIT")
 
         mylib_dist = FakeDistWithRequires(
             mylib_meta, ['optional-dep>=1.0 ; extra == "dev"', "real-dep>=1.0"]
@@ -640,3 +601,165 @@ class TestTransitiveDependencyCollection:
         names = {n.name for n in result}
         assert "optional-dep" not in names
         assert "real-dep" in names
+
+
+# ---------------------------------------------------------------------------
+# SBOM import tests
+# ---------------------------------------------------------------------------
+
+
+class TestScanFromSbom:
+    """Test SPDX 2.3 SBOM JSON import."""
+
+    def test_valid_sbom_with_packages(self, tmp_path: Path) -> None:
+        sbom = {
+            "packages": [
+                {
+                    "name": "requests",
+                    "versionInfo": "2.31.0",
+                    "licenseDeclared": "Apache-2.0",
+                },
+                {
+                    "name": "click",
+                    "versionInfo": "8.1.0",
+                    "licenseDeclared": "BSD-3-Clause",
+                },
+            ]
+        }
+        sbom_file = tmp_path / "sbom.json"
+        sbom_file.write_text(json.dumps(sbom))
+
+        nodes = scan_from_sbom(sbom_file)
+        assert len(nodes) == 2
+        names = {n.name for n in nodes}
+        assert "requests" in names
+        assert "click" in names
+        assert all(n.source == "spdx_sbom" for n in nodes)
+
+    def test_noassertion_packages_skipped(self, tmp_path: Path) -> None:
+        sbom = {
+            "packages": [
+                {"name": "unknown-pkg", "licenseDeclared": "NOASSERTION"},
+                {"name": "known-pkg", "licenseDeclared": "MIT"},
+            ]
+        }
+        sbom_file = tmp_path / "sbom.json"
+        sbom_file.write_text(json.dumps(sbom))
+
+        nodes = scan_from_sbom(sbom_file)
+        assert len(nodes) == 1
+        assert nodes[0].name == "known-pkg"
+
+    def test_empty_packages_list(self, tmp_path: Path) -> None:
+        sbom_file = tmp_path / "sbom.json"
+        sbom_file.write_text(json.dumps({"packages": []}))
+
+        nodes = scan_from_sbom(sbom_file)
+        assert nodes == []
+
+    def test_missing_packages_key(self, tmp_path: Path) -> None:
+        sbom_file = tmp_path / "sbom.json"
+        sbom_file.write_text(json.dumps({"spdxVersion": "SPDX-2.3"}))
+
+        nodes = scan_from_sbom(sbom_file)
+        assert nodes == []
+
+    def test_package_without_version(self, tmp_path: Path) -> None:
+        sbom = {"packages": [{"name": "pkg", "licenseDeclared": "MIT"}]}
+        sbom_file = tmp_path / "sbom.json"
+        sbom_file.write_text(json.dumps(sbom))
+
+        nodes = scan_from_sbom(sbom_file)
+        assert len(nodes) == 1
+        assert nodes[0].version is None
+
+
+# ---------------------------------------------------------------------------
+# npm scanning pipeline tests
+# ---------------------------------------------------------------------------
+
+
+class TestScanNpmDeps:
+    """Test the full npm dependency scanning pipeline."""
+
+    def test_no_package_json_returns_empty(self, tmp_path: Path) -> None:
+        nodes = _scan_npm_deps(tmp_path)
+        assert nodes == []
+
+    def test_reads_direct_deps_from_package_json(self, tmp_path: Path) -> None:
+        """When npm ls is not available, falls back to package.json + node_modules."""
+        pkg = {
+            "dependencies": {"express": "^4.18.0"},
+            "devDependencies": {"jest": "^29.0.0"},
+        }
+        (tmp_path / "package.json").write_text(json.dumps(pkg))
+
+        # Create node_modules with license info
+        express_dir = tmp_path / "node_modules" / "express"
+        express_dir.mkdir(parents=True)
+        (express_dir / "package.json").write_text(json.dumps({"license": "MIT"}))
+
+        jest_dir = tmp_path / "node_modules" / "jest"
+        jest_dir.mkdir(parents=True)
+        (jest_dir / "package.json").write_text(json.dumps({"license": "MIT"}))
+
+        with patch("licensestoic.scanner.subprocess.run", side_effect=FileNotFoundError):
+            nodes = _scan_npm_deps(tmp_path)
+
+        assert len(nodes) == 2
+        express_node = next(n for n in nodes if n.name == "express")
+        assert express_node.license_expression.is_valid_spdx
+        assert express_node.integration_type == IntegrationType.STATIC_LINK
+
+        jest_node = next(n for n in nodes if n.name == "jest")
+        assert jest_node.integration_type == IntegrationType.DEV_ONLY
+
+    def test_dev_deps_marked_correctly(self, tmp_path: Path) -> None:
+        pkg = {"devDependencies": {"prettier": "^3.0"}}
+        (tmp_path / "package.json").write_text(json.dumps(pkg))
+
+        with patch("licensestoic.scanner.subprocess.run", side_effect=FileNotFoundError):
+            nodes = _scan_npm_deps(tmp_path)
+
+        assert len(nodes) == 1
+        assert nodes[0].integration_type == IntegrationType.DEV_ONLY
+
+    @patch("licensestoic.scanner.subprocess.run")
+    def test_npm_ls_tree_walking(self, mock_run: MagicMock, tmp_path: Path) -> None:
+        """When npm ls succeeds, walk the full tree."""
+        npm_tree = {
+            "dependencies": {
+                "express": {
+                    "version": "4.18.0",
+                    "dependencies": {
+                        "body-parser": {"version": "1.20.0"},
+                    },
+                },
+            }
+        }
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=json.dumps(npm_tree), stderr=""
+        )
+
+        pkg = {"dependencies": {"express": "^4.18.0"}}
+        (tmp_path / "package.json").write_text(json.dumps(pkg))
+
+        # Create node_modules for enrichment
+        for name in ("express", "body-parser"):
+            d = tmp_path / "node_modules" / name
+            d.mkdir(parents=True)
+            (d / "package.json").write_text(json.dumps({"license": "MIT"}))
+
+        nodes = _scan_npm_deps(tmp_path)
+        names = {n.name for n in nodes}
+        assert "express" in names
+        assert "body-parser" in names
+
+        bp = next(n for n in nodes if n.name == "body-parser")
+        assert bp.depth == 2
+        assert bp.parent == "express"
+
+    def test_malformed_package_json(self, tmp_path: Path) -> None:
+        (tmp_path / "package.json").write_text("not valid json {{{")
+        nodes = _scan_npm_deps(tmp_path)
+        assert nodes == []

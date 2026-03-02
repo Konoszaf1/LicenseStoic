@@ -228,3 +228,163 @@ class TestCleanLLMOutputPasses:
         )
         violations = validate_llm_output(good_explanation, scan)
         assert violations == []
+
+
+# ---------------------------------------------------------------------------
+# LLM response parsing tests
+# ---------------------------------------------------------------------------
+
+
+class TestParseLlmResponse:
+    """Test _parse_llm_response JSON extraction."""
+
+    def test_valid_json(self):
+        from licensestoic.llm_explainer import _parse_llm_response
+
+        raw = (
+            '{"conflict_explanations": [], "remediation_rankings": [], '
+            '"ambiguous_licenses": [], "overall_summary": "All clear."}'
+        )
+        result = _parse_llm_response(raw)
+        assert result.overall_summary == "All clear."
+        assert result.conflict_explanations == []
+        assert result.raw_response == raw
+
+    def test_json_with_markdown_fences(self):
+        from licensestoic.llm_explainer import _parse_llm_response
+
+        raw = (
+            "```json\n"
+            '{"conflict_explanations": [], "remediation_rankings": [], '
+            '"ambiguous_licenses": [], "overall_summary": "Fenced."}\n'
+            "```"
+        )
+        result = _parse_llm_response(raw)
+        assert result.overall_summary == "Fenced."
+
+    def test_malformed_json_returns_fallback(self):
+        from licensestoic.llm_explainer import _parse_llm_response
+
+        result = _parse_llm_response("this is not json at all")
+        assert result.conflict_explanations == []
+        assert result.remediation_rankings == []
+        assert "this is not json" in result.overall_summary
+
+    def test_empty_string_returns_fallback(self):
+        from licensestoic.llm_explainer import _parse_llm_response
+
+        result = _parse_llm_response("")
+        assert result.overall_summary == "LLM response could not be parsed."
+
+    def test_partial_json_uses_defaults(self):
+        from licensestoic.llm_explainer import _parse_llm_response
+
+        result = _parse_llm_response('{"overall_summary": "partial"}')
+        assert result.overall_summary == "partial"
+        assert result.conflict_explanations == []
+
+
+# ---------------------------------------------------------------------------
+# LLM prompt construction tests
+# ---------------------------------------------------------------------------
+
+
+class TestBuildLlmPrompt:
+    """Test that build_llm_prompt produces well-formed prompts."""
+
+    def test_includes_project_metadata(self):
+        from licensestoic.llm_explainer import build_llm_prompt
+
+        scan = _make_scan_result_with_conflict()
+        prompt = build_llm_prompt(scan)
+
+        assert "test-project" in prompt
+        assert "MIT" in prompt
+        assert "binary" in prompt
+
+    def test_includes_conflict_data(self):
+        from licensestoic.llm_explainer import build_llm_prompt
+
+        scan = _make_scan_result_with_conflict()
+        prompt = build_llm_prompt(scan)
+
+        assert "GPL-3.0-only" in prompt
+        assert "gpl-dep" in prompt
+
+    def test_includes_remediation_data(self):
+        from licensestoic.llm_explainer import build_llm_prompt
+
+        scan = _make_scan_result_with_conflict()
+        prompt = build_llm_prompt(scan)
+
+        assert "replace_dependency" in prompt
+        assert "remove_dependency" in prompt
+
+    def test_no_ambiguous_section_when_all_valid(self):
+        from licensestoic.llm_explainer import build_llm_prompt
+
+        scan = _make_scan_result_with_conflict()
+        prompt = build_llm_prompt(scan)
+
+        assert "Ambiguous license texts" not in prompt
+
+
+class TestEstimateEffort:
+    """Test the _estimate_effort mapping."""
+
+    def test_high_feasibility_trivial(self):
+        from licensestoic.llm_explainer import _estimate_effort
+
+        assert _estimate_effort(0.8) == "trivial"
+
+    def test_medium_feasibility_moderate(self):
+        from licensestoic.llm_explainer import _estimate_effort
+
+        assert _estimate_effort(0.5) == "moderate"
+
+    def test_low_feasibility_significant(self):
+        from licensestoic.llm_explainer import _estimate_effort
+
+        assert _estimate_effort(0.3) == "significant"
+
+    def test_very_low_feasibility_major(self):
+        from licensestoic.llm_explainer import _estimate_effort
+
+        assert _estimate_effort(0.1) == "major"
+
+
+class TestMultipleSimultaneousViolations:
+    """Verify the validator catches multiple violations in a single response."""
+
+    def test_phantom_and_invented_and_dismissive(self):
+        scan = _make_scan_result_with_conflict()
+        bad_explanation = LLMExplanation(
+            conflict_explanations=[
+                {
+                    "conflict_id": "conflict-FAKE",
+                    "plain_language": "Fake.",
+                    "severity_context": "Fake.",
+                }
+            ],
+            remediation_rankings=[
+                {
+                    "conflict_id": "conflict-gpl-dep-GPL-3.0-only",
+                    "ranked_options": [
+                        {
+                            "strategy": "magic_fix",
+                            "rank": 1,
+                            "engineering_cost_explanation": "Magic.",
+                            "estimated_effort": "trivial",
+                        }
+                    ],
+                }
+            ],
+            ambiguous_licenses=[],
+            overall_summary="This conflict is not really a problem.",
+            raw_response="{}",
+        )
+        violations = validate_llm_output(bad_explanation, scan)
+        assert len(violations) >= 3
+        assert any("non-existent conflict" in v for v in violations)
+        assert any("invented remediation" in v for v in violations)
+        assert any("dismissed" in v for v in violations)

@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 340" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="sevBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#161b22;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="sevBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#238636"/>
+      <stop offset="20%" style="stop-color:#7ee787"/>
+      <stop offset="40%" style="stop-color:#d29922"/>
+      <stop offset="60%" style="stop-color:#f0883e"/>
+      <stop offset="80%" style="stop-color:#da3633"/>
+      <stop offset="100%" style="stop-color:#8b1a1a"/>
+    </linearGradient>
+    <filter id="sevShadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="dotGlow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="340" rx="16" fill="url(#sevBg)"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" fill="#f0f6fc" font-size="18" font-weight="700" letter-spacing="0.5">ANCHORED SEVERITY MODEL</text>
+  <text x="450" y="58" text-anchor="middle" fill="#8b949e" font-size="12" letter-spacing="1.5">DOCUMENTED REFERENCE POINTS · NOT ARBITRARY HIGH / MEDIUM / LOW</text>
+
+  <!-- Main severity bar -->
+  <g filter="url(#sevShadow)">
+    <rect x="80" y="85" width="740" height="28" rx="14" fill="url(#sevBar)" opacity="0.9"/>
+  </g>
+
+  <!-- Scale labels -->
+  <text x="80" y="132" text-anchor="middle" fill="#8b949e" font-size="11">0.0</text>
+  <text x="265" y="132" text-anchor="middle" fill="#8b949e" font-size="11">0.25</text>
+  <text x="450" y="132" text-anchor="middle" fill="#8b949e" font-size="11">0.50</text>
+  <text x="635" y="132" text-anchor="middle" fill="#8b949e" font-size="11">0.75</text>
+  <text x="820" y="132" text-anchor="middle" fill="#8b949e" font-size="11">1.0</text>
+
+  <!-- Anchor point 1: 0.0 -->
+  <g filter="url(#dotGlow)">
+    <circle cx="80" cy="99" r="8" fill="#238636" stroke="#0d1117" stroke-width="2"/>
+  </g>
+  <line x1="80" y1="112" x2="80" y2="148" stroke="#30363d" stroke-width="1"/>
+  <g filter="url(#sevShadow)">
+    <rect x="15" y="148" width="130" height="72" rx="8" fill="#0d1117" stroke="#238636" stroke-width="1.5"/>
+  </g>
+  <text x="80" y="168" text-anchor="middle" fill="#7ee787" font-size="11" font-weight="700">PERMISSIVE</text>
+  <text x="80" y="185" text-anchor="middle" fill="#c9d1d9" font-size="10">MIT dep in</text>
+  <text x="80" y="199" text-anchor="middle" fill="#c9d1d9" font-size="10">Apache-2.0 project</text>
+  <text x="80" y="214" text-anchor="middle" fill="#8b949e" font-size="9" font-style="italic">Attribution only</text>
+
+  <!-- Anchor point 2: 0.25 -->
+  <g filter="url(#dotGlow)">
+    <circle cx="265" cy="99" r="8" fill="#7ee787" stroke="#0d1117" stroke-width="2"/>
+  </g>
+  <line x1="265" y1="112" x2="265" y2="148" stroke="#30363d" stroke-width="1"/>
+  <g filter="url(#sevShadow)">
+    <rect x="195" y="148" width="140" height="72" rx="8" fill="#0d1117" stroke="#7ee787" stroke-width="1.5"/>
+  </g>
+  <text x="265" y="168" text-anchor="middle" fill="#7ee787" font-size="11" font-weight="700">WEAK COPYLEFT</text>
+  <text x="265" y="185" text-anchor="middle" fill="#c9d1d9" font-size="10">LGPL-2.1</text>
+  <text x="265" y="199" text-anchor="middle" fill="#c9d1d9" font-size="10">dynamically linked</text>
+  <text x="265" y="214" text-anchor="middle" fill="#8b949e" font-size="9" font-style="italic">Likely compliant</text>
+
+  <!-- Anchor point 3: 0.5 -->
+  <g filter="url(#dotGlow)">
+    <circle cx="450" cy="99" r="8" fill="#d29922" stroke="#0d1117" stroke-width="2"/>
+  </g>
+  <line x1="450" y1="112" x2="450" y2="148" stroke="#30363d" stroke-width="1"/>
+  <g filter="url(#sevShadow)">
+    <rect x="380" y="148" width="140" height="72" rx="8" fill="#0d1117" stroke="#d29922" stroke-width="1.5"/>
+  </g>
+  <text x="450" y="168" text-anchor="middle" fill="#d29922" font-size="11" font-weight="700">FILE-LEVEL COPYLEFT</text>
+  <text x="450" y="185" text-anchor="middle" fill="#c9d1d9" font-size="10">MPL-2.0 in</text>
+  <text x="450" y="199" text-anchor="middle" fill="#c9d1d9" font-size="10">proprietary codebase</text>
+  <text x="450" y="214" text-anchor="middle" fill="#8b949e" font-size="9" font-style="italic">Review required</text>
+
+  <!-- Anchor point 4: 0.75 -->
+  <g filter="url(#dotGlow)">
+    <circle cx="635" cy="99" r="8" fill="#da3633" stroke="#0d1117" stroke-width="2"/>
+  </g>
+  <line x1="635" y1="112" x2="635" y2="148" stroke="#30363d" stroke-width="1"/>
+  <g filter="url(#sevShadow)">
+    <rect x="560" y="148" width="150" height="72" rx="8" fill="#0d1117" stroke="#da3633" stroke-width="1.5"/>
+  </g>
+  <text x="635" y="168" text-anchor="middle" fill="#ffa198" font-size="11" font-weight="700">STRONG COPYLEFT</text>
+  <text x="635" y="185" text-anchor="middle" fill="#c9d1d9" font-size="10">GPL-3.0 statically</text>
+  <text x="635" y="199" text-anchor="middle" fill="#c9d1d9" font-size="10">linked into MIT binary</text>
+  <text x="635" y="214" text-anchor="middle" fill="#8b949e" font-size="9" font-style="italic">Escalation required</text>
+
+  <!-- Anchor point 5: 1.0 -->
+  <g filter="url(#dotGlow)">
+    <circle cx="820" cy="99" r="8" fill="#8b1a1a" stroke="#0d1117" stroke-width="2"/>
+  </g>
+  <line x1="820" y1="112" x2="820" y2="148" stroke="#30363d" stroke-width="1"/>
+  <g filter="url(#sevShadow)">
+    <rect x="745" y="148" width="150" height="72" rx="8" fill="#0d1117" stroke="#8b1a1a" stroke-width="1.5"/>
+  </g>
+  <text x="820" y="168" text-anchor="middle" fill="#ffa198" font-size="11" font-weight="700">NETWORK COPYLEFT</text>
+  <text x="820" y="185" text-anchor="middle" fill="#c9d1d9" font-size="10">AGPL-3.0 in</text>
+  <text x="820" y="199" text-anchor="middle" fill="#c9d1d9" font-size="10">proprietary SaaS</text>
+  <text x="820" y="214" text-anchor="middle" fill="#8b949e" font-size="9" font-style="italic">Maximum exposure</text>
+
+  <!-- Context adjustment legend -->
+  <g filter="url(#sevShadow)">
+    <rect x="80" y="248" width="740" height="75" rx="10" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+  </g>
+  <text x="450" y="271" text-anchor="middle" fill="#8b949e" font-size="12" font-weight="600" letter-spacing="1">CONTEXTUAL ADJUSTMENTS</text>
+
+  <circle cx="120" cy="298" r="4" fill="#238636"/>
+  <text x="135" y="302" fill="#c9d1d9" font-size="11">Internal distribution: <tspan fill="#7ee787" font-weight="600">-0.30</tspan></text>
+
+  <circle cx="360" cy="298" r="4" fill="#238636"/>
+  <text x="375" y="302" fill="#c9d1d9" font-size="11">Subprocess isolation: <tspan fill="#7ee787" font-weight="600">-0.15</tspan></text>
+
+  <circle cx="590" cy="298" r="4" fill="#da3633"/>
+  <text x="605" y="302" fill="#c9d1d9" font-size="11">Static linking: <tspan fill="#ffa198" font-weight="600">+0.10</tspan></text>
+
+  <circle cx="120" cy="315" r="4" fill="#238636"/>
+  <text x="135" y="319" fill="#c9d1d9" font-size="11">LGPL + dynamic link: <tspan fill="#7ee787" font-weight="600">-0.20</tspan></text>
+
+  <circle cx="360" cy="315" r="4" fill="#da3633"/>
+  <text x="375" y="319" fill="#c9d1d9" font-size="11">AGPL + SaaS: <tspan fill="#ffa198" font-weight="600">+0.15</tspan></text>
+</svg>

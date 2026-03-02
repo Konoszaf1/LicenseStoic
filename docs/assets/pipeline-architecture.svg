@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 520" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#161b22;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="detGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#238636;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1a6b2b;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#da3633;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#b62324;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="gateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1f6feb;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1958c7;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#484f58;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#6e7681;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6e7681"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="520" rx="16" fill="url(#bgGrad)"/>
+
+  <!-- Title -->
+  <text x="550" y="42" text-anchor="middle" fill="#f0f6fc" font-size="20" font-weight="700" letter-spacing="0.5">THE 5-LAYER DETERMINISTIC PIPELINE</text>
+  <text x="550" y="64" text-anchor="middle" fill="#8b949e" font-size="13" letter-spacing="2">AI IS BOUNDED · VERDICTS ARE DETERMINISTIC · MISTAKES ARE OBSERVABLE</text>
+
+  <!-- Layer 1: Scanning -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="95" width="190" height="160" rx="12" fill="#0d1117" stroke="#238636" stroke-width="2"/>
+    <rect x="30" y="95" width="190" height="36" rx="12" fill="url(#detGrad)"/>
+    <rect x="30" y="119" width="190" height="12" fill="url(#detGrad)"/>
+    <text x="125" y="119" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">LAYER 1 · SCAN</text>
+    <text x="125" y="152" text-anchor="middle" fill="#7ee787" font-size="10" font-weight="600">DETERMINISTIC</text>
+    <text x="125" y="175" text-anchor="middle" fill="#c9d1d9" font-size="10.5">importlib.metadata</text>
+    <text x="125" y="192" text-anchor="middle" fill="#c9d1d9" font-size="10.5">pyproject.toml / uv</text>
+    <text x="125" y="209" text-anchor="middle" fill="#c9d1d9" font-size="10.5">PyPI API fallback</text>
+    <text x="125" y="226" text-anchor="middle" fill="#c9d1d9" font-size="10.5">npm ls / node_modules</text>
+    <text x="125" y="245" text-anchor="middle" fill="#8b949e" font-size="9.5" font-style="italic">scanner.py · 817 lines</text>
+  </g>
+
+  <!-- Arrow 1→2 -->
+  <line x1="225" y1="175" x2="250" y2="175" stroke="#6e7681" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Layer 2: Validation -->
+  <g filter="url(#shadow)">
+    <rect x="255" y="95" width="190" height="160" rx="12" fill="#0d1117" stroke="#238636" stroke-width="2"/>
+    <rect x="255" y="95" width="190" height="36" rx="12" fill="url(#detGrad)"/>
+    <rect x="255" y="119" width="190" height="12" fill="url(#detGrad)"/>
+    <text x="350" y="119" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">LAYER 2 · VALIDATE</text>
+    <text x="350" y="152" text-anchor="middle" fill="#7ee787" font-size="10" font-weight="600">DETERMINISTIC</text>
+    <text x="350" y="175" text-anchor="middle" fill="#c9d1d9" font-size="10.5">OSADL matrix (flict)</text>
+    <text x="350" y="192" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Built-in fallback (~50 pairs)</text>
+    <text x="350" y="209" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Context adjustments</text>
+    <text x="350" y="226" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Permissive fast-path</text>
+    <text x="350" y="245" text-anchor="middle" fill="#8b949e" font-size="9.5" font-style="italic">validator.py · 436 lines</text>
+  </g>
+
+  <!-- Arrow 2→3 -->
+  <line x1="450" y1="175" x2="475" y2="175" stroke="#6e7681" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Layer 3: Remediation -->
+  <g filter="url(#shadow)">
+    <rect x="480" y="95" width="190" height="160" rx="12" fill="#0d1117" stroke="#238636" stroke-width="2"/>
+    <rect x="480" y="95" width="190" height="36" rx="12" fill="url(#detGrad)"/>
+    <rect x="480" y="119" width="190" height="12" fill="url(#detGrad)"/>
+    <text x="575" y="119" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">LAYER 3 · REMEDIATE</text>
+    <text x="575" y="152" text-anchor="middle" fill="#7ee787" font-size="10" font-weight="600">DETERMINISTIC</text>
+    <text x="575" y="175" text-anchor="middle" fill="#c9d1d9" font-size="10.5">5 finite strategies</text>
+    <text x="575" y="192" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Re-validated per option</text>
+    <text x="575" y="209" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Cascade conflict check</text>
+    <text x="575" y="226" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Compound dedup</text>
+    <text x="575" y="245" text-anchor="middle" fill="#8b949e" font-size="9.5" font-style="italic">remediation.py · 310 lines</text>
+  </g>
+
+  <!-- Arrow 3→4 -->
+  <line x1="675" y1="175" x2="700" y2="175" stroke="#6e7681" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Layer 4: LLM Explain (AI-bounded) -->
+  <g filter="url(#shadow)">
+    <rect x="705" y="95" width="190" height="160" rx="12" fill="#0d1117" stroke="#da3633" stroke-width="2"/>
+    <rect x="705" y="95" width="190" height="36" rx="12" fill="url(#aiGrad)"/>
+    <rect x="705" y="119" width="190" height="12" fill="url(#aiGrad)"/>
+    <text x="800" y="119" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">LAYER 4 · EXPLAIN</text>
+    <text x="800" y="152" text-anchor="middle" fill="#ffa198" font-size="10" font-weight="600">BOUNDED AI</text>
+    <text x="800" y="175" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Claude API (optional)</text>
+    <text x="800" y="192" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Structured JSON schema</text>
+    <text x="800" y="209" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Adversarial validation</text>
+    <text x="800" y="226" text-anchor="middle" fill="#c9d1d9" font-size="10.5">Deterministic fallback</text>
+    <text x="800" y="245" text-anchor="middle" fill="#8b949e" font-size="9.5" font-style="italic">llm_explainer.py · 339 lines</text>
+  </g>
+
+  <!-- Arrow 4→5 -->
+  <line x1="900" y1="175" x2="925" y2="175" stroke="#6e7681" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Layer 5: Human Review Gate -->
+  <g filter="url(#shadow)">
+    <rect x="930" y="95" width="140" height="160" rx="12" fill="#0d1117" stroke="#1f6feb" stroke-width="2"/>
+    <rect x="930" y="95" width="140" height="36" rx="12" fill="url(#gateGrad)"/>
+    <rect x="930" y="119" width="140" height="12" fill="url(#gateGrad)"/>
+    <text x="1000" y="119" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">LAYER 5 · GATE</text>
+    <text x="1000" y="152" text-anchor="middle" fill="#79c0ff" font-size="10" font-weight="600">DETERMINISTIC</text>
+    <text x="1000" y="175" text-anchor="middle" fill="#c9d1d9" font-size="10.5">AUTO_APPLY</text>
+    <text x="1000" y="192" text-anchor="middle" fill="#c9d1d9" font-size="10.5">SUGGEST</text>
+    <text x="1000" y="209" text-anchor="middle" fill="#c9d1d9" font-size="10.5">ESCALATE</text>
+    <text x="1000" y="245" text-anchor="middle" fill="#8b949e" font-size="9.5" font-style="italic">review_gate.py</text>
+  </g>
+
+  <!-- Adversarial Validation Box -->
+  <g filter="url(#shadow)">
+    <rect x="260" y="310" width="580" height="185" rx="12" fill="#0d1117" stroke="#f0883e" stroke-width="1.5" stroke-dasharray="6,3"/>
+    <text x="550" y="338" text-anchor="middle" fill="#f0883e" font-size="14" font-weight="700">ADVERSARIAL POST-HOC VALIDATION</text>
+    <text x="550" y="356" text-anchor="middle" fill="#8b949e" font-size="11">validate_llm_output() catches these violations after every LLM response:</text>
+
+    <!-- Violation items -->
+    <circle cx="300" cy="383" r="4" fill="#da3633"/>
+    <text x="315" y="387" fill="#c9d1d9" font-size="11.5">Phantom conflicts — LLM references conflicts that don't exist</text>
+
+    <circle cx="300" cy="408" r="4" fill="#da3633"/>
+    <text x="315" y="412" fill="#c9d1d9" font-size="11.5">Invented strategies — options outside the pre-validated set of 5</text>
+
+    <circle cx="300" cy="433" r="4" fill="#da3633"/>
+    <text x="315" y="437" fill="#c9d1d9" font-size="11.5">Dismissive language — "not really a problem", "can be safely ignored"</text>
+
+    <circle cx="300" cy="458" r="4" fill="#da3633"/>
+    <text x="315" y="462" fill="#c9d1d9" font-size="11.5">Unsafe GPL versions — GPL-2.0-only vs GPL-2.0-or-later with low confidence</text>
+
+    <text x="550" y="486" text-anchor="middle" fill="#f0883e" font-size="10.5" font-weight="600">Violations become ReliabilityWarning objects — observable, auditable data</text>
+  </g>
+
+  <!-- Connection line from Layer 4 down to validation box -->
+  <path d="M 800 260 L 800 290 L 550 290 L 550 305" fill="none" stroke="#f0883e" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowhead)"/>
+
+  <!-- Legend -->
+  <rect x="30" y="310" width="210" height="100" rx="8" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
+  <text x="135" y="333" text-anchor="middle" fill="#8b949e" font-size="11" font-weight="600">LEGEND</text>
+  <rect x="48" y="345" width="14" height="14" rx="3" fill="none" stroke="#238636" stroke-width="2"/>
+  <text x="72" y="357" fill="#c9d1d9" font-size="11">Deterministic layer</text>
+  <rect x="48" y="369" width="14" height="14" rx="3" fill="none" stroke="#da3633" stroke-width="2"/>
+  <text x="72" y="381" fill="#c9d1d9" font-size="11">Bounded AI layer</text>
+  <rect x="48" y="393" width="14" height="14" rx="3" fill="none" stroke="#f0883e" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="72" y="405" fill="#c9d1d9" font-size="11">Post-hoc validation</text>
+</svg>
